@@ -28,9 +28,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         {children}
-       <div className="text-center py-4 text-sm text-gray-500">
-        <p>© 2025 Kulp Blogs. All rights reserved.</p>
-       </div>
+        <div className="text-center bg-purple-700 py-4 text-sm text-gray-500 shadow-[0_-4px_6px_-1px_rgba(255,255,255,0.1)]">
+          <p className="text-white">© 2025 Kulp Blogs. All rights reserved.</p>
+        </div>
       </body>
     </html>
   );
