@@ -2,7 +2,9 @@ import NextAuth from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
 import { db } from '@/lib/db'; // Drizzle connection
 import { profiles } from '@/lib/schema'; // Drizzle schema
+import { eq } from 'drizzle-orm'; // Import eq function
 export const authOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
@@ -12,30 +14,38 @@ export const authOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
+        if (!profile?.sub) {
+          console.error("No profile.sub found");
+          return false;
+        }
+
         const { email, name, image, locale } = user;
-        const { access_token, refresh_token, expires_in } = account;
-    
+        const { access_token, refresh_token, expires_in } = account || {};
+
         // Check if user exists in database
         const userExists = await db
           .select()
           .from(profiles)
-          .where(profiles.provider_user_id.isEqual(profile.sub)) // Use `.isEqual()` here
+          .where(eq(profiles.provider_user_id, profile.sub)) // Use eq() function
           .limit(1);
     
+        const tokenExpiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : null;
+
         if (userExists.length > 0) {
           await db
             .update(profiles)
             .set({
+              provider: 'google',
               email,
               full_name: name,
               avatar_url: image,
               locale,
               access_token,
               refresh_token,
-              token_expires_at: new Date(Date.now() + expires_in * 1000),
+              token_expires_at: tokenExpiresAt,
               updated_at: new Date(),
             })
-            .where(profiles.provider_user_id.isEqual(profile.sub)); // Use `.isEqual()` for the condition
+            .where(eq(profiles.provider_user_id, profile.sub)); // Use eq() function for the condition
         } else {
           await db.insert(profiles).values({
             provider: 'google',
@@ -46,12 +56,12 @@ export const authOptions = {
             locale,
             access_token,
             refresh_token,
-            token_expires_at: new Date(Date.now() + expires_in * 1000),
+            token_expires_at: tokenExpiresAt,
             updated_at: new Date(),
           });
         }
     
-        return true;
+        return '/'; // Redirect to home page after successful sign-in
       } catch (error) {
         console.error("Error during sign-in:", error);
         return false;

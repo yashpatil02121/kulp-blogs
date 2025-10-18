@@ -12,7 +12,8 @@ export const posts = pgTable("posts", {
 
 export const profiles = pgTable('profiles', {
   id: serial('id').primaryKey(),
-  provider_user_id: varchar('provider_user_id', { length: 255 }).notNull(),  // Define provider_user_id column
+  provider: varchar('provider', { length: 50 }).notNull(),
+  provider_user_id: varchar('provider_user_id', { length: 255 }).notNull(),
   email: varchar('email', { length: 255 }).unique(),
   full_name: varchar('full_name', { length: 255 }),
   avatar_url: text('avatar_url'),

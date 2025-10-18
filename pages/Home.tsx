@@ -1,9 +1,21 @@
+'use client';
+
 import React from 'react';
 import { Vortex } from '@/components/ui/vortex';
+import { useSession } from 'next-auth/react';
 
 export default function Home() {
+  const { data: session } = useSession();
+
   return (
     <div className="min-h-screen bg-black">
+            {session?.user && (
+        <div className="text-end bg-black">
+          <p className="text-lg text-gray-300">
+            Welcome back, <span className="text-purple-500 font-semibold">{session.user.name}</span>!
+          </p>
+        </div>
+      )}
       <Vortex
         particleCount={100}
         baseHue={220}
@@ -21,6 +33,8 @@ export default function Home() {
           </p>
         </div>
       </Vortex>
+
+
     </div>
   );
 }
