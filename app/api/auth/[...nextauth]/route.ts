@@ -3,6 +3,15 @@ import GoogleProvider from 'next-auth/providers/google';
 import { db } from '@/lib/db'; // Drizzle connection
 import { profiles } from '@/lib/schema'; // Drizzle schema
 import { eq } from 'drizzle-orm'; // Import eq function
+
+// Define Google profile interface to fix TypeScript warning
+interface GoogleProfile {
+  sub: string;
+  name: string;
+  email: string;
+  picture: string;
+  locale?: string;
+}
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   providers: [
@@ -12,7 +21,11 @@ export const authOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ user, account, profile }: {
+      user: any;
+      account: any;
+      profile: GoogleProfile;
+    }) {
       try {
         if (!profile?.sub) {
           console.error("No profile.sub found");
@@ -26,7 +39,7 @@ export const authOptions = {
         const userExists = await db
           .select()
           .from(profiles)
-          .where(eq(profiles.provider_user_id, profile.sub)) // Use eq() function
+          .where(eq(profiles.provider_user_id, profile.sub)) // Fixed: added profile.sub
           .limit(1);
     
         const tokenExpiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : null;
@@ -60,7 +73,7 @@ export const authOptions = {
             updated_at: new Date(),
           });
         }
-    
+
         return '/'; // Redirect to home page after successful sign-in
       } catch (error) {
         console.error("Error during sign-in:", error);
@@ -68,11 +81,28 @@ export const authOptions = {
       }
     },
        
-    async session({ session, token }) {
+    async session({ session, token }: { session: any; token: any }) {
       session.user.id = token.sub;
+
+      // Fetch profile data from database
+      try {
+        const profileData = await db
+          .select()
+          .from(profiles)
+          .where(eq(profiles.provider_user_id, token.sub))
+          .limit(1);
+
+        if (profileData.length > 0) {
+          session.profile = profileData[0];
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+
       return session;
     },
   },
+
   pages: {
     signIn: '/auth/signin', // Custom sign-in page path
   },

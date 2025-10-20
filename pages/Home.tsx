@@ -1,18 +1,45 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Vortex } from '@/components/ui/vortex';
 import { useSession } from 'next-auth/react';
+import { Profile } from '@/lib/types';
 
 export default function Home() {
   const { data: session } = useSession();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    // Store profile data in localStorage when session becomes available
+    if (session?.user && session?.profile && !profile) {
+      // Create profileToBeStored as requested
+      const profileToBeStored = JSON.stringify(session.profile);
+      localStorage.setItem('profile', profileToBeStored);
+      setProfile(session.profile);
+    }
+  }, [session, profile]);
+
+  useEffect(() => {
+    // Get profile data from localStorage on component mount (for returning users)
+    if (!profile) {
+      const profileToBeStored = localStorage.getItem('profile');
+      if (profileToBeStored) {
+        try {
+          const parsedProfile = JSON.parse(profileToBeStored);
+          setProfile(parsedProfile);
+        } catch (error) {
+          console.error('Error parsing profile from localStorage:', error);
+        }
+      }
+    }
+  }, [profile]);
 
   return (
     <div className="min-h-screen bg-black">
-            {session?.user && (
+            {session?.user && profile && (
         <div className="text-end bg-black">
           <p className="text-lg text-gray-300">
-            Welcome back, <span className="text-purple-500 font-semibold">{session.user.name}</span>!
+            Welcome back, <span className="text-purple-500 font-semibold">{profile.full_name}</span>!
           </p>
         </div>
       )}
