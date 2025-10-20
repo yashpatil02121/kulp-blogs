@@ -1,24 +1,25 @@
 'use client';
 
 import { signIn, useSession } from 'next-auth/react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function SignInPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const router = useRouter();
+  const [hasNavigated, setHasNavigated] = useState(false);
 
   useEffect(() => {
-    if (status === 'authenticated') {
-      // Redirect to home page after successful authentication
+    if (status === 'authenticated' && session?.profile && !hasNavigated) {
+      localStorage.setItem('profile', JSON.stringify(session.profile));
+      setHasNavigated(true);
       router.push('/');
     }
-  }, [status, router]);
+  }, [status, session, router, hasNavigated]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">
-      {/* <h1>Sign In</h1> */}
-      <button onClick={() => signIn('google')}>Sign in with Google</button>
+      <button onClick={() => signIn('google', { callbackUrl: '/auth/signin' })}>Sign in with Google</button>
     </div>
   );
 }

@@ -1,10 +1,9 @@
-import NextAuth from 'next-auth';
+import NextAuth, { AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
-import { db } from '@/lib/db'; // Drizzle connection
-import { profiles } from '@/lib/schema'; // Drizzle schema
-import { eq } from 'drizzle-orm'; // Import eq function
+import { db } from '@/lib/db';
+import { profiles } from '@/lib/schema';
+import { eq } from 'drizzle-orm';
 
-// Define Google profile interface to fix TypeScript warning
 interface GoogleProfile {
   sub: string;
   name: string;
@@ -12,61 +11,75 @@ interface GoogleProfile {
   picture: string;
   locale?: string;
 }
-export const authOptions = {
-  secret: process.env.NEXTAUTH_SECRET,
+
+declare module 'next-auth' {
+  interface Session {
+    user: {
+      id?: string;
+      name?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+    profile?: typeof profiles.$inferSelect;
+  }
+  interface JWT {
+    profile?: typeof profiles.$inferSelect;
+  }
+}
+
+export const authOptions: AuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET!,
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }: {
-      user: any;
-      account: any;
-      profile: GoogleProfile;
-    }) {
+    async signIn({ user, account, profile }) {
       try {
-        if (!profile?.sub) {
+        const googleProfile = profile as GoogleProfile;
+        if (!googleProfile?.sub) {
           console.error("No profile.sub found");
           return false;
         }
 
-        const { email, name, image, locale } = user;
-        const { access_token, refresh_token, expires_in } = account || {};
+        const { email, name, image } = user;
+        const access_token = account?.access_token;
+        const refresh_token = account?.refresh_token;
+        const expires_in = account?.expires_at;
 
-        // Check if user exists in database
         const userExists = await db
           .select()
           .from(profiles)
-          .where(eq(profiles.provider_user_id, profile.sub)) // Fixed: added profile.sub
+          .where(eq(profiles.provider_user_id, googleProfile.sub))
           .limit(1);
     
-        const tokenExpiresAt = expires_in ? new Date(Date.now() + expires_in * 1000) : null;
+        const tokenExpiresAt = expires_in ? new Date(expires_in * 1000) : null;
 
         if (userExists.length > 0) {
           await db
             .update(profiles)
             .set({
               provider: 'google',
-              email,
-              full_name: name,
-              avatar_url: image,
-              locale,
+              email: email || undefined,
+              full_name: name || undefined,
+              avatar_url: image || undefined,
+              locale: googleProfile.locale,
               access_token,
               refresh_token,
               token_expires_at: tokenExpiresAt,
               updated_at: new Date(),
             })
-            .where(eq(profiles.provider_user_id, profile.sub)); // Use eq() function for the condition
+            .where(eq(profiles.provider_user_id, googleProfile.sub));
         } else {
           await db.insert(profiles).values({
             provider: 'google',
-            provider_user_id: profile.sub,
-            email,
-            full_name: name,
-            avatar_url: image,
-            locale,
+            provider_user_id: googleProfile.sub,
+            email: email || undefined,
+            full_name: name || undefined,
+            avatar_url: image || undefined,
+            locale: googleProfile.locale,
             access_token,
             refresh_token,
             token_expires_at: tokenExpiresAt,
@@ -74,29 +87,39 @@ export const authOptions = {
           });
         }
 
-        return '/'; // Redirect to home page after successful sign-in
+        return true;
       } catch (error) {
         console.error("Error during sign-in:", error);
         return false;
       }
     },
-       
-    async session({ session, token }: { session: any; token: any }) {
-      session.user.id = token.sub;
 
-      // Fetch profile data from database
-      try {
-        const profileData = await db
-          .select()
-          .from(profiles)
-          .where(eq(profiles.provider_user_id, token.sub))
-          .limit(1);
+    async jwt({ token }) {
+      if (token.sub) {
+        try {
+          const profileData = await db
+            .select()
+            .from(profiles)
+            .where(eq(profiles.provider_user_id, token.sub))
+            .limit(1);
 
-        if (profileData.length > 0) {
-          session.profile = profileData[0];
+          if (profileData.length > 0) {
+            token.profile = profileData[0];
+          }
+        } catch (error) {
+          console.error("Error fetching profile in jwt callback:", error);
         }
-      } catch (error) {
-        console.error("Error fetching profile data:", error);
+      }
+      return token;
+    },
+       
+    async session({ session, token }) {
+      if (session.user && token.sub) {
+        session.user.id = token.sub as string;
+      }
+
+      if (token.profile && typeof token.profile === 'object' && 'id' in token.profile) {
+        session.profile = token.profile as typeof profiles.$inferSelect;
       }
 
       return session;
@@ -104,7 +127,7 @@ export const authOptions = {
   },
 
   pages: {
-    signIn: '/auth/signin', // Custom sign-in page path
+    signIn: '/auth/signin',
   },
 };
 

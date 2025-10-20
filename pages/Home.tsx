@@ -8,35 +8,53 @@ import { Profile } from '@/lib/types';
 export default function Home() {
   const { data: session } = useSession();
   const [profile, setProfile] = useState<Profile | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [storedSession, setStoredSession] = useState<any>(null);
 
   useEffect(() => {
-    // Store profile data in localStorage when session becomes available
-    if (session?.user && session?.profile && !profile) {
-      // Create profileToBeStored as requested
-      const profileToBeStored = JSON.stringify(session.profile);
-      localStorage.setItem('profile', profileToBeStored);
+    // Get stored session and profile data from localStorage on component mount
+    const storedSessionData = localStorage.getItem('session');
+    const storedProfileData = localStorage.getItem('profile');
+
+    if (storedSessionData) {
+      try {
+        const parsedSession = JSON.parse(storedSessionData);
+        setStoredSession(parsedSession);
+      } catch (error) {
+        console.error('Error parsing session from localStorage:', error);
+      }
+    }
+
+    if (storedProfileData) {
+      try {
+        const parsedProfile = JSON.parse(storedProfileData);
+        setProfile(parsedProfile);
+      } catch (error) {
+        console.error('Error parsing profile from localStorage:', error);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // Update with live session data if available and save complete profile
+    if (session?.user && session?.profile) {
+      // Update localStorage with complete profile data
+      const profileObject = JSON.stringify(session.profile);
+      localStorage.setItem('profile', profileObject);
+
+      // Update session in localStorage
+      const sessionData = JSON.stringify(session);
+      localStorage.setItem('session', sessionData);
+
       setProfile(session.profile);
+      setStoredSession(session);
+      console.log('Complete profile data updated in localStorage');
     }
   }, [session, profile]);
 
-  useEffect(() => {
-    // Get profile data from localStorage on component mount (for returning users)
-    if (!profile) {
-      const profileToBeStored = localStorage.getItem('profile');
-      if (profileToBeStored) {
-        try {
-          const parsedProfile = JSON.parse(profileToBeStored);
-          setProfile(parsedProfile);
-        } catch (error) {
-          console.error('Error parsing profile from localStorage:', error);
-        }
-      }
-    }
-  }, [profile]);
-
   return (
     <div className="min-h-screen bg-black">
-            {session?.user && profile && (
+            {(session?.user || storedSession?.user) && profile && (
         <div className="text-end bg-black">
           <p className="text-lg text-gray-300">
             Welcome back, <span className="text-purple-500 font-semibold">{profile.full_name}</span>!
