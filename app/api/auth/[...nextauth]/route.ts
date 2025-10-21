@@ -14,11 +14,11 @@ interface GoogleProfile {
 }
 
 interface GitHubProfile {
-  sub: string;
-  name: string;
-  email: string;
-  picture: string;
-  locale?: string;
+  id: string;
+  login: string;
+  name: string | null;
+  email: string | null;
+  avatar_url: string;
 }
 
 declare module 'next-auth' {
@@ -46,6 +46,11 @@ export const authOptions: AuthOptions = {
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          scope: 'read:user user:email'
+        }
+      }
     }),
   ],
   callbacks: {
@@ -53,11 +58,15 @@ export const authOptions: AuthOptions = {
       try {
         const googleProfile = profile as GoogleProfile;
         const githubProfile = profile as GitHubProfile;
-        if (!googleProfile?.sub && !githubProfile?.sub) {
-          console.error("No profile.sub found");
+
+        // Get provider-specific user ID
+        const providerUserId = googleProfile?.sub || githubProfile?.id;
+        if (!providerUserId) {
+          console.error("No provider user ID found");
           return false;
         }
 
+        const provider = account?.provider || 'unknown';
         const { email, name, image } = user;
         const access_token = account?.access_token;
         const refresh_token = account?.refresh_token;
@@ -66,34 +75,37 @@ export const authOptions: AuthOptions = {
         const userExists = await db
           .select()
           .from(profiles)
-          .where(eq(profiles.provider_user_id, googleProfile.sub || githubProfile.sub))
+          .where(eq(profiles.provider_user_id, providerUserId))
           .limit(1);
-    
+
         const tokenExpiresAt = expires_in ? new Date(expires_in * 1000) : null;
+
+        // Get locale from Google profile if available
+        const locale = googleProfile?.locale;
 
         if (userExists.length > 0) {
           await db
             .update(profiles)
             .set({
-              provider: googleProfile.sub ? 'google' : 'github',
+              provider,
               email: email || undefined,
               full_name: name || undefined,
               avatar_url: image || undefined,
-              locale: googleProfile.locale,
+              locale,
               access_token,
               refresh_token,
               token_expires_at: tokenExpiresAt,
               updated_at: new Date(),
             })
-            .where(eq(profiles.provider_user_id, googleProfile.sub || githubProfile.sub));
+            .where(eq(profiles.provider_user_id, providerUserId));
         } else {
           await db.insert(profiles).values({
-            provider: googleProfile.sub ? 'google' : 'github',
-            provider_user_id: googleProfile.sub || githubProfile.sub,
+            provider,
+            provider_user_id: providerUserId,
             email: email || undefined,
             full_name: name || undefined,
             avatar_url: image || undefined,
-            locale: googleProfile.locale,
+            locale,
             access_token,
             refresh_token,
             token_expires_at: tokenExpiresAt,
