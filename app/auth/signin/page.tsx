@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Vortex } from '@/components/ui/vortex';
 import { Button } from '@/components/ui/button';
+import GradientText from '@/components/GradientText';
 
 export default function SignInPage() {
   const { data: session, status } = useSession();
@@ -36,9 +37,11 @@ export default function SignInPage() {
           </p>
           <Button
             onClick={() => signIn('google', { callbackUrl: '/auth/signin' })}
-            className="bg-white text-black hover:bg-gray-200 px-8 py-3 text-lg font-medium rounded-full shadow-lg transition-all duration-300 hover:scale-105"
+            className="bg-transparent border border-white text-white  px-8 py-3 text-lg font-medium rounded-full shadow-lg transition-all duration-300 hover:scale-105"
           >
+            <GradientText>
             Sign in with Google
+            </GradientText>
           </Button>
         </div>
       </div>
