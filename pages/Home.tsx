@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import { Vortex } from '@/components/ui/vortex';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Profile } from '@/lib/types';
 
 export default function Home() {
   const { data: session } = useSession();
+  const router = useRouter();
   const [profile, setProfile] = useState<Profile | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [storedSession, setStoredSession] = useState<any>(null);
@@ -51,6 +53,14 @@ export default function Home() {
       console.log('Complete profile data updated in localStorage');
     }
   }, [session, profile]);
+
+  useEffect(() => {
+    // Check if profile exists in localStorage, if not navigate to signin
+    const storedProfileData = localStorage.getItem('profile');
+    if (!storedProfileData) {
+      router.push('/auth/signin');
+    }
+  }, [router]);
 
   return (
     <div className="min-h-screen bg-black">
