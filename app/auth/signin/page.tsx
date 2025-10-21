@@ -43,6 +43,14 @@ export default function SignInPage() {
             Sign in with Google
             </GradientText>
           </Button>
+          <Button
+            onClick={() => signIn('github', { callbackUrl: '/auth/signin' })}
+            className="bg-transparent border border-white text-white  px-8 py-3 text-lg font-medium rounded-full shadow-lg transition-all duration-300 hover:scale-105"
+          >
+            <GradientText>
+            Sign in with GitHub
+            </GradientText>
+          </Button>
         </div>
       </div>
     </Vortex>

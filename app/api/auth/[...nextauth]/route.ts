@@ -1,10 +1,19 @@
 import NextAuth, { AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import GitHubProvider from "next-auth/providers/github";
 import { db } from '@/lib/db';
 import { profiles } from '@/lib/schema';
 import { eq } from 'drizzle-orm';
 
 interface GoogleProfile {
+  sub: string;
+  name: string;
+  email: string;
+  picture: string;
+  locale?: string;
+}
+
+interface GitHubProfile {
   sub: string;
   name: string;
   email: string;
@@ -34,12 +43,17 @@ export const authOptions: AuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    GitHubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
       try {
         const googleProfile = profile as GoogleProfile;
-        if (!googleProfile?.sub) {
+        const githubProfile = profile as GitHubProfile;
+        if (!googleProfile?.sub && !githubProfile?.sub) {
           console.error("No profile.sub found");
           return false;
         }
@@ -52,7 +66,7 @@ export const authOptions: AuthOptions = {
         const userExists = await db
           .select()
           .from(profiles)
-          .where(eq(profiles.provider_user_id, googleProfile.sub))
+          .where(eq(profiles.provider_user_id, googleProfile.sub || githubProfile.sub))
           .limit(1);
     
         const tokenExpiresAt = expires_in ? new Date(expires_in * 1000) : null;
@@ -61,7 +75,7 @@ export const authOptions: AuthOptions = {
           await db
             .update(profiles)
             .set({
-              provider: 'google',
+              provider: googleProfile.sub ? 'google' : 'github',
               email: email || undefined,
               full_name: name || undefined,
               avatar_url: image || undefined,
@@ -71,11 +85,11 @@ export const authOptions: AuthOptions = {
               token_expires_at: tokenExpiresAt,
               updated_at: new Date(),
             })
-            .where(eq(profiles.provider_user_id, googleProfile.sub));
+            .where(eq(profiles.provider_user_id, googleProfile.sub || githubProfile.sub));
         } else {
           await db.insert(profiles).values({
-            provider: 'google',
-            provider_user_id: googleProfile.sub,
+            provider: googleProfile.sub ? 'google' : 'github',
+            provider_user_id: googleProfile.sub || githubProfile.sub,
             email: email || undefined,
             full_name: name || undefined,
             avatar_url: image || undefined,
