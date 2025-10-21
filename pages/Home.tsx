@@ -5,6 +5,7 @@ import { Vortex } from '@/components/ui/vortex';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Profile } from '@/lib/types';
+import RecentPosts from '@/components/RecentPosts';
 
 export default function Home() {
   const { data: session } = useSession();
@@ -88,8 +89,7 @@ export default function Home() {
           </p>
         </div>
       </Vortex>
-
-
+      <RecentPosts />
     </div>
   );
 }
