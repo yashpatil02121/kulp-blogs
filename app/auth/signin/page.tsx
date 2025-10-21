@@ -35,6 +35,8 @@ export default function SignInPage() {
           <p className="text-lg md:text-xl text-gray-300 mb-8 max-w-md">
             Sign in to continue your journey with us
           </p>
+          <div className="flex items-center justify-center flex-col gap-4">
+
           <Button
             onClick={() => signIn('google', { callbackUrl: '/auth/signin' })}
             className="bg-transparent border border-white text-white  px-8 py-3 text-lg font-medium rounded-full shadow-lg transition-all duration-300 hover:scale-105"
@@ -51,6 +53,8 @@ export default function SignInPage() {
             Sign in with GitHub
             </GradientText>
           </Button>
+          </div>
+
         </div>
       </div>
     </Vortex>
