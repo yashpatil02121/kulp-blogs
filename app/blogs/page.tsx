@@ -17,6 +17,8 @@ export default function BlogsPage() {
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const postsPerPage = 9;
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -49,7 +51,30 @@ export default function BlogsPage() {
       );
       setFilteredPosts(filtered);
     }
+    setCurrentPage(1); // Reset to first page when search changes
   }, [searchTerm, postsData]);
+
+  // Calculate pagination
+  const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+  const currentPosts = filteredPosts.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
 
   if (loading) {
     return (
@@ -111,14 +136,14 @@ export default function BlogsPage() {
         <div className="mb-8 text-center">
           <p className="text-gray-300">
             {filteredPosts.length === postsData.length
-              ? `Showing all ${postsData.length} blogs`
-              : `Found ${filteredPosts.length} of ${postsData.length} blogs`
+              ? `Showing ${currentPosts.length} of ${postsData.length} blogs (Page ${currentPage} of ${totalPages})`
+              : `Found ${filteredPosts.length} of ${postsData.length} blogs (Page ${currentPage} of ${totalPages})`
             }
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPosts.map((post) => (
+          {currentPosts.map((post) => (
             <ProfileCard
               key={post.id}
               name={post.title}
@@ -134,10 +159,52 @@ export default function BlogsPage() {
           ))}
         </div>
 
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-12 flex justify-center">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={handlePrevPage}
+                disabled={currentPage === 1}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              >
+                Previous
+              </button>
+
+              {/* Page numbers */}
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNum = Math.max(1, Math.min(totalPages - 4, currentPage - 2)) + i;
+                if (pageNum > totalPages) return null;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => handlePageChange(pageNum)}
+                    className={`px-4 py-2 rounded-lg transition-colors ${
+                      currentPage === pageNum
+                        ? 'bg-purple-600 text-white'
+                        : 'bg-gray-700 hover:bg-gray-600 text-white'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={handleNextPage}
+                disabled={currentPage === totalPages}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* No search results message */}
         {filteredPosts.length === 0 && postsData.length > 0 && (
           <div className="text-center py-12">
-            <p className="text-gray-400 text-lg">No blogs found matching "{searchTerm}"</p>
+            <p className="text-gray-400 text-lg">No blogs found matching &quot;{searchTerm}&quot;</p>
             <button
               onClick={() => setSearchTerm('')}
               className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
