@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import ProfileCard from '@/components/ProfileCard';
 
 interface Post {
   id: number;
@@ -38,7 +39,7 @@ export default function RecentPosts() {
     return (
       <div className="py-12 px-4 max-w-6xl mx-auto">
         <h2 className="text-3xl font-bold text-white mb-8 text-center">Recent Posts</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-6">
           {[...Array(6)].map((_, i) => (
             <div key={i} className="bg-gray-800 rounded-lg p-6 animate-pulse">
               <div className="h-4 bg-gray-700 rounded mb-2"></div>
@@ -63,22 +64,20 @@ export default function RecentPosts() {
   return (
     <div className="py-12 px-4 max-w-6xl mx-auto">
       <h2 className="text-3xl font-bold text-white mb-8 text-center">Recent Posts</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {postsData.map((post) => (
-          <div key={post.id} className="bg-gray-800 rounded-lg p-6 hover:bg-gray-700 transition-colors">
-            <h3 className="text-xl font-semibold text-white mb-3 line-clamp-2">
-              {post.title}
-            </h3>
-            <p className="text-gray-400 text-sm mb-4 line-clamp-3">
-              {post.content.substring(0, 150)}...
-            </p>
-            <div className="flex justify-between items-center text-sm text-gray-500">
-              {post.author && <span>By {post.author}</span>}
-              {post.createdAt && (
-                <span>{new Date(post.createdAt).toLocaleDateString()}</span>
-              )}
-            </div>
-          </div>
+          <ProfileCard
+            key={post.id}
+            name={post.title}
+            title={post.author || 'Anonymous'}
+            handle={post.slug}
+            status={post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Draft'}
+            avatarUrl="https://via.placeholder.com/150"
+            miniAvatarUrl="https://via.placeholder.com/50"
+            behindGradient="radial-gradient(farthest-side circle at var(--pointer-x) var(--pointer-y),hsla(266,100%,90%,var(--card-opacity)) 4%,hsla(266,50%,80%,calc(var(--card-opacity)*0.75)) 10%,hsla(266,25%,70%,calc(var(--card-opacity)*0.5)) 50%,hsla(266,0%,60%,0) 100%),radial-gradient(35% 52% at 55% 20%,#00ffaac4 0%,#073aff00 100%),radial-gradient(100% 100% at 50% 50%,#00c1ffff 1%,#073aff00 76%),conic-gradient(from 124deg at 50% 50%,#c137ffff 0%,#07c6ffff 40%,#07c6ffff 60%,#c137ffff 100%)"
+            innerGradient="linear-gradient(145deg,#60496e8c 0%,#71C4FF44 100%)"
+            onContactClick={() => window.location.href = `/blog/${post.slug}`}
+          />
         ))}
       </div>
     </div>
