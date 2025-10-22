@@ -15,14 +15,13 @@ export async function GET() {
         createdAt: posts.createdAt,
       })
       .from(posts)
-      .orderBy(desc(posts.createdAt))
-      .limit(6);
+      .orderBy(desc(posts.createdAt));
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error('Error fetching posts:', error);
+    console.error('Error fetching all posts:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch posts' },
+      { error: 'Failed to fetch all posts' },
       { status: 500 }
     );
   }
