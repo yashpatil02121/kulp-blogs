@@ -298,7 +298,7 @@ const ProfileCardComponent = ({
             )}
           </div>
           <div className="pc-content">
-            <div className="pc-details">
+            <div className="pc-details px-4">
               <h3>{name}</h3>
               <p>{title}</p>
             </div>
