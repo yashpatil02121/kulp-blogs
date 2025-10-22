@@ -19,7 +19,6 @@ export default function BlogsPage() {
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [useSemanticSearch, setUseSemanticSearch] = useState(true);
   const postsPerPage = 9;
 
   useEffect(() => {
@@ -48,35 +47,21 @@ export default function BlogsPage() {
       return;
     }
 
-    if (useSemanticSearch) {
-      setSearching(true);
-      try {
-        const response = await fetch(`/api/posts/search?q=${encodeURIComponent(query)}`);
-        if (!response.ok) {
-          throw new Error('Failed to search posts');
-        }
-        const result = await response.json();
-        setFilteredPosts(result);
-      } catch (error) {
-        console.error('Error searching posts:', error);
-        const filtered = postsData.filter(post =>
-          post.title.toLowerCase().includes(query.toLowerCase()) ||
-          post.content.toLowerCase().includes(query.toLowerCase()) ||
-          (post.author && post.author.toLowerCase().includes(query.toLowerCase()))
-        );
-        setFilteredPosts(filtered);
-      } finally {
-        setSearching(false);
+    setSearching(true);
+    try {
+      const response = await fetch(`/api/posts/search?q=${encodeURIComponent(query)}`);
+      if (!response.ok) {
+        throw new Error('Failed to search posts');
       }
-    } else {
-      const filtered = postsData.filter(post =>
-        post.title.toLowerCase().includes(query.toLowerCase()) ||
-        post.content.toLowerCase().includes(query.toLowerCase()) ||
-        (post.author && post.author.toLowerCase().includes(query.toLowerCase()))
-      );
-      setFilteredPosts(filtered);
+      const result = await response.json();
+      setFilteredPosts(result);
+    } catch (error) {
+      console.error('Error searching posts:', error);
+      setFilteredPosts([]);
+    } finally {
+      setSearching(false);
     }
-  }, [postsData, useSemanticSearch]);
+  }, [postsData]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -155,7 +140,7 @@ export default function BlogsPage() {
           <div className="relative w-full max-w-md">
             <input
               type="text"
-              placeholder={useSemanticSearch ? "AI-powered semantic search..." : "Search blogs by title, content, or author..."}
+              placeholder="Search Blogs..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
@@ -169,21 +154,6 @@ export default function BlogsPage() {
                 </svg>
               )}
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setUseSemanticSearch(!useSemanticSearch)}
-              className={`px-4 py-2 rounded-lg transition-all ${
-                useSemanticSearch
-                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-              }`}
-            >
-              {useSemanticSearch ? '🤖 AI Search' : '📝 Text Search'}
-            </button>
-            <span className="text-gray-400 text-sm">
-              {useSemanticSearch ? 'Using semantic search (RAG)' : 'Using keyword search'}
-            </span>
           </div>
         </div>
 
