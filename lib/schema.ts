@@ -6,6 +6,7 @@ export const posts = pgTable("posts", {
   slug: varchar("slug", { length: 256 }).notNull().unique(),
   content: text("content").notNull(),
   author: varchar("author", { length: 100 }),
+  embedding: text("embedding"),
   createdAt: timestamp("created_at").defaultNow(),
 })
 

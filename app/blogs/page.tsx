@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import ProfileCard from '@/components/ProfileCard';
 
 interface Post {
@@ -17,7 +17,9 @@ export default function BlogsPage() {
   const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searching, setSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [useSemanticSearch, setUseSemanticSearch] = useState(true);
   const postsPerPage = 9;
 
   useEffect(() => {
@@ -40,19 +42,53 @@ export default function BlogsPage() {
     fetchPosts();
   }, []);
 
-  useEffect(() => {
-    if (searchTerm === '') {
+  const performSearch = useCallback(async (query: string) => {
+    if (query === '') {
       setFilteredPosts(postsData);
+      return;
+    }
+
+    if (useSemanticSearch) {
+      setSearching(true);
+      try {
+        const response = await fetch(`/api/posts/search?q=${encodeURIComponent(query)}`);
+        if (!response.ok) {
+          throw new Error('Failed to search posts');
+        }
+        const result = await response.json();
+        setFilteredPosts(result);
+      } catch (error) {
+        console.error('Error searching posts:', error);
+        const filtered = postsData.filter(post =>
+          post.title.toLowerCase().includes(query.toLowerCase()) ||
+          post.content.toLowerCase().includes(query.toLowerCase()) ||
+          (post.author && post.author.toLowerCase().includes(query.toLowerCase()))
+        );
+        setFilteredPosts(filtered);
+      } finally {
+        setSearching(false);
+      }
     } else {
       const filtered = postsData.filter(post =>
-        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (post.author && post.author.toLowerCase().includes(searchTerm.toLowerCase()))
+        post.title.toLowerCase().includes(query.toLowerCase()) ||
+        post.content.toLowerCase().includes(query.toLowerCase()) ||
+        (post.author && post.author.toLowerCase().includes(query.toLowerCase()))
       );
       setFilteredPosts(filtered);
     }
-    setCurrentPage(1); // Reset to first page when search changes
-  }, [searchTerm, postsData]);
+  }, [postsData, useSemanticSearch]);
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      performSearch(searchTerm);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm, performSearch]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredPosts]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredPosts.length / postsPerPage);
@@ -115,20 +151,39 @@ export default function BlogsPage() {
         </p>
 
         {/* Search Bar */}
-        <div className="mb-12 flex justify-center">
+        <div className="mb-12 flex flex-col items-center gap-4">
           <div className="relative w-full max-w-md">
             <input
               type="text"
-              placeholder="Search blogs by title, content, or author..."
+              placeholder={useSemanticSearch ? "AI-powered semantic search..." : "Search blogs by title, content, or author..."}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
             <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+              {searching ? (
+                <div className="w-5 h-5 border-2 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              )}
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setUseSemanticSearch(!useSemanticSearch)}
+              className={`px-4 py-2 rounded-lg transition-all ${
+                useSemanticSearch
+                  ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/50'
+                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
+            >
+              {useSemanticSearch ? '🤖 AI Search' : '📝 Text Search'}
+            </button>
+            <span className="text-gray-400 text-sm">
+              {useSemanticSearch ? 'Using semantic search (RAG)' : 'Using keyword search'}
+            </span>
           </div>
         </div>
 
