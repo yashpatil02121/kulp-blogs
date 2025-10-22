@@ -14,6 +14,8 @@ interface Post {
 
 export default function BlogsPage() {
   const [postsData, setPostsData] = useState<Post[]>([]);
+  const [filteredPosts, setFilteredPosts] = useState<Post[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,6 +27,7 @@ export default function BlogsPage() {
         }
         const result = await response.json();
         setPostsData(result);
+        setFilteredPosts(result);
       } catch (error) {
         console.error('Error fetching posts:', error);
       } finally {
@@ -34,6 +37,19 @@ export default function BlogsPage() {
 
     fetchPosts();
   }, []);
+
+  useEffect(() => {
+    if (searchTerm === '') {
+      setFilteredPosts(postsData);
+    } else {
+      const filtered = postsData.filter(post =>
+        post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        post.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (post.author && post.author.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+      setFilteredPosts(filtered);
+    }
+  }, [searchTerm, postsData]);
 
   if (loading) {
     return (
@@ -69,11 +85,40 @@ export default function BlogsPage() {
     <div className="min-h-screen bg-black py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-white mb-8 text-center">All Blogs</h1>
-        <p className="text-xl text-gray-300 mb-12 text-center">
+        <p className="text-xl text-gray-300 mb-8 text-center">
           Discover all our blog posts and stories
         </p>
+
+        {/* Search Bar */}
+        <div className="mb-12 flex justify-center">
+          <div className="relative w-full max-w-md">
+            <input
+              type="text"
+              placeholder="Search blogs by title, content, or author..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        {/* Results Count */}
+        <div className="mb-8 text-center">
+          <p className="text-gray-300">
+            {filteredPosts.length === postsData.length
+              ? `Showing all ${postsData.length} blogs`
+              : `Found ${filteredPosts.length} of ${postsData.length} blogs`
+            }
+          </p>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {postsData.map((post) => (
+          {filteredPosts.map((post) => (
             <ProfileCard
               key={post.id}
               name={post.title}
@@ -88,6 +133,19 @@ export default function BlogsPage() {
             />
           ))}
         </div>
+
+        {/* No search results message */}
+        {filteredPosts.length === 0 && postsData.length > 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-lg">No blogs found matching "{searchTerm}"</p>
+            <button
+              onClick={() => setSearchTerm('')}
+              className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
+            >
+              Clear search
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
