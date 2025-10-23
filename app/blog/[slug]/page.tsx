@@ -1,12 +1,10 @@
-import { db } from "@/lib/db"
-import { posts } from "@/lib/schema"
-import { eq } from "drizzle-orm"
 import { ArrowLeft, Clock, User } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import GradientText from "@/components/GradientText"
+import AISummarizer from "@/components/AISummarizer"
 
 interface BlogPostPageProps {
   params: { slug: string }
@@ -72,9 +70,9 @@ function extractTags(content: string): string[] {
 }
 
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const post = await db.query.posts.findFirst({
-    where: eq(posts.slug, params.slug),
-  })
+  const { slug } = await params
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/posts/${slug}`)
+  const post = response.ok ? await response.json() : null
 
   if (!post) {
     return (
@@ -158,6 +156,8 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 ))}
               </div>
             )}
+
+            <AISummarizer content={post.content} />
           </CardHeader>
 
           <CardContent className="pt-0">

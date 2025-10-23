@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
     return config;
   },
   experimental: {
-    serverComponentsExternalPackages: ['@xenova/transformers'],
+    serverComponentsExternalPackages: ['@xenova/transformers', 'pg', 'drizzle-orm'],
   },
 };
 

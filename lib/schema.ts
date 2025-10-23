@@ -1,3 +1,4 @@
+import "server-only"
 import { pgTable, serial, text, timestamp, varchar, unique } from "drizzle-orm/pg-core"
 
 export const posts = pgTable("posts", {
