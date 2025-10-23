@@ -22,7 +22,45 @@ function estimateReadingTime(content: string): number {
 // Function to extract tags from content (simple implementation)
 function extractTags(content: string): string[] {
   const tags: string[] = []
-  const keywords = ['React', 'Next.js', 'JavaScript', 'TypeScript', 'API', 'Database', 'Frontend', 'Backend']
+  const keywords = [
+    // Core technologies
+    'React', 'Next.js', 'JavaScript', 'TypeScript', 'Node.js', 'Express', 'HTML', 'CSS', 'Tailwind CSS',
+  
+    // Frameworks & Libraries
+    'Vue', 'Nuxt.js', 'Angular', 'Svelte', 'Redux', 'Zustand', 'React Query', 'Axios',
+  
+    // Backend & APIs
+    'API', 'REST API', 'GraphQL', 'gRPC', 'Database', 'SQL', 'NoSQL', 'MongoDB', 'PostgreSQL', 'MySQL',
+    'Prisma', 'Sequelize', 'Firebase', 'Supabase',
+  
+    // Frontend
+    'Frontend', 'UI', 'UX', 'Responsive Design', 'Component', 'SPA', 'CSR', 'SSR', 'Hydration',
+  
+    // Backend
+    'Backend', 'Server', 'Authentication', 'Authorization', 'JWT', 'OAuth', 'Session', 'Middleware',
+  
+    // DevOps & Deployment
+    'CI/CD', 'Docker', 'Kubernetes', 'AWS', 'Vercel', 'Netlify', 'Cloudflare', 'GitHub Actions',
+  
+    // Testing
+    'Vitest', 'Jest', 'Testing Library', 'Cypress', 'Playwright', 'Unit Test', 'Integration Test', 'E2E Test',
+  
+    // Tools & Build Systems
+    'Vite', 'Webpack', 'Babel', 'ESLint', 'Prettier', 'TSConfig', 'Package.json', 'npm', 'yarn', 'pnpm',
+  
+    // General Software Concepts
+    'Design Patterns', 'Clean Code', 'OOP', 'Functional Programming', 'Refactoring', 'State Management',
+  
+    // Performance & Optimization
+    'Lazy Loading', 'Code Splitting', 'Caching', 'Optimization', 'SEO', 'Core Web Vitals',
+  
+    // Version Control & Collaboration
+    'Git', 'GitHub', 'GitLab', 'Pull Request', 'Merge Conflict', 'Branching Strategy',
+  
+    // Miscellaneous
+    'Full Stack', 'Web Development', 'Software Engineering', 'Microservices', 'Monorepo'
+  ];
+  
 
   keywords.forEach(keyword => {
     if (content.toLowerCase().includes(keyword.toLowerCase())) {
