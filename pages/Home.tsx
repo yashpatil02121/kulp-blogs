@@ -7,12 +7,17 @@ import { useRouter } from 'next/navigation';
 import { Profile } from '@/lib/types';
 import RecentPosts from '@/components/RecentPosts';
 
+import { usePostStore } from "@/lib/store/usePostStore"
+import { useProfileStore } from "@/lib/store/useProfileStore"
+
 export default function Home() {
   const { data: session } = useSession();
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  // const [profile, setProfile] = useState<Profile | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [storedSession, setStoredSession] = useState<any>(null);
+  const { posts, setPosts } = usePostStore()
+  const { profile, setProfile } = useProfileStore()
 
   useEffect(() => {
     // Get stored session and profile data from localStorage on component mount
