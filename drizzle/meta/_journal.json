@@ -8,6 +8,27 @@
       "when": 1760683936806,
       "tag": "0000_worthless_lady_bullseye",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1760783321763,
+      "tag": "0001_bumpy_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1761134661556,
+      "tag": "0002_careful_master_mold",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1761282074940,
+      "tag": "0003_pink_bucky",
+      "breakpoints": true
     }
   ]
 }

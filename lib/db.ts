@@ -1,3 +1,7 @@
+// Only import server-only in Next.js environment
+if (typeof window === 'undefined' && process.env.NEXT_RUNTIME) {
+  require("server-only");
+}
 import { drizzle } from "drizzle-orm/node-postgres"
 import { Pool } from "pg"
 

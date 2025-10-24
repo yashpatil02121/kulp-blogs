@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { Providers } from "@/components/providers";
+import "@/lib/types";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,7 +29,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <Providers>
+          {children}
+        </Providers>
         <div className="text-center bg-purple-700 py-4 text-sm text-gray-500 shadow-[0_-4px_6px_-1px_rgba(255,255,255,0.1)]">
           <p className="text-white">© 2025 Kulp Blogs. All rights reserved.</p>
         </div>
