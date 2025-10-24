@@ -1,5 +1,6 @@
 import NextAuth, { AuthOptions } from 'next-auth';
 import GoogleProvider from 'next-auth/providers/google';
+import  googleOauth2  from 'googleapis'
 import GitHubProvider from "next-auth/providers/github";
 import { db } from '@/lib/db';
 import { profiles } from '@/lib/schema';
@@ -42,7 +43,16 @@ export const authOptions: AuthOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code",
+          scope: ["https://www.googleapis.com/auth/calendar"]
+        },
+      },
     }),
+    
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID!,
       clientSecret: process.env.GITHUB_CLIENT_SECRET!,
