@@ -82,6 +82,13 @@ export default function RecentPosts() {
           </Link>
         ))}
       </div>
+      <div className="text-center">
+        <button onClick={() => window.location.href = '/blogs'} className="bg-transparent text-white mt-8 underline px-8 py-3 text-lg font-medium rounded-full shadow-lg transition-all duration-300 hover:scale-105">
+          <Link href="/blogs">
+            View All Posts
+          </Link>
+        </button>
+      </div>
     </div>
   );
 }
