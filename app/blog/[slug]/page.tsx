@@ -1,5 +1,5 @@
 'use client'
-import { ArrowLeft, Clock, User } from "lucide-react"
+import { ArrowLeft, Clock, User, HardDrive } from "lucide-react"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -81,6 +81,7 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
   const [post, setPost] = useState<Post | null>(null)
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [savingToDrive, setSavingToDrive] = useState(false)
   const [slug, setSlug] = useState<string>('')
   const emailInputRef = useRef<HTMLInputElement>(null)
 
@@ -201,6 +202,93 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
       console.error(error)
     } finally {
       setSending(false)
+    }
+  }
+
+  const handleSaveToDrive = async () => {
+    if (!post) {
+      alert('No blog post to save')
+      return
+    }
+
+    const profileStr = localStorage.getItem('profile')
+    if (!profileStr) {
+      alert('Please sign in to save to Google Drive')
+      return
+    }
+
+    const profile = JSON.parse(profileStr)
+    if (!profile.access_token && !profile.refresh_token) {
+      alert('No authentication token found. Please sign in again.')
+      return
+    }
+
+    setSavingToDrive(true)
+
+    try {
+      const response = await fetch('/api/save-to-drive', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: post.title,
+          content: post.content,
+          author: post.author,
+          createdAt: post.createdAt,
+          accessToken: profile.access_token,
+          refreshToken: profile.refresh_token,
+          provider: profile.provider,
+          providerId: profile.provider_user_id,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (response.ok) {
+        alert('Blog saved to Google Drive successfully!')
+        if (result.fileUrl) {
+          window.open(result.fileUrl, '_blank')
+        }
+      } else {
+        if (result.error === 'Drive API not enabled') {
+          const shouldEnable = confirm(
+            `⚠️ Google Drive API is not enabled in your Google Cloud Console.\n\n` +
+            `To save files to Drive, you need to:\n` +
+            `1. Enable the Google Drive API in your Google Cloud project\n` +
+            `2. Wait a few minutes for changes to propagate\n\n` +
+            `Click OK to open the Drive API activation page.`
+          )
+          if (shouldEnable && result.activationUrl) {
+            window.open(result.activationUrl, '_blank')
+          }
+        } else if (result.error?.includes('Drive permissions required') ||
+                   result.error?.includes('sign out and sign in again') ||
+                   result.error?.includes('grant Drive permission')) {
+          const shouldReauth = confirm(
+            `Google Drive permissions are required to save files.\n\n` +
+            `IMPORTANT: You need to sign in again to grant Drive access:\n` +
+            `1. Go to: https://myaccount.google.com/permissions\n` +
+            `2. Find and remove "Kulp Blogs" access (if present)\n` +
+            `3. Then sign in again - you'll be asked to grant Drive permissions\n\n` +
+            `Click OK to sign out now and go to permissions page.`
+          )
+          if (shouldReauth) {
+            localStorage.clear()
+            window.open('https://myaccount.google.com/permissions', '_blank')
+            setTimeout(() => {
+              window.location.href = '/auth/signin'
+            }, 1000)
+          }
+        } else {
+          alert(`Failed to save to Drive: ${result.error}`)
+        }
+      }
+    } catch (error) {
+      alert('Error saving to Drive. Please try again.')
+      console.error(error)
+    } finally {
+      setSavingToDrive(false)
     }
   }
 
@@ -332,9 +420,18 @@ export default function BlogPostPage({ params }: BlogPostPageProps) {
         </Card>
       </div>
       <div className="text-center text-white space-x-4 py-4 text-sm text-gray-500 shadow-[0_-4px_6px_-1px_rgba(255,255,255,0.1)]">
-        <input ref={emailInputRef} type="text" defaultValue={"yash.203859107@vcet.edu.in"} placeholder="Enter your email" className="w-full max-w-md mx-auto p-2 rounded-md border border-gray-300 text-white" />
-        <button onClick={handleSendEmail} disabled={sending} className="bg-white text-purple-700 px-4 py-2 rounded-md disabled:opacity-50">
-          {sending ? 'Sending...' : 'send blog to email'}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+          <input ref={emailInputRef} type="text" placeholder="Enter your email" className="w-full max-w-md p-2 rounded-md border border-gray-300 text-white bg-gray-800" />
+          <button onClick={handleSendEmail} disabled={sending} className="bg-white text-purple-700 px-4 py-2 rounded-md disabled:opacity-50 whitespace-nowrap">
+            {sending ? 'Sending...' : 'Send Blog to Email'}
+          </button>
+        </div>
+        <button
+          onClick={handleSaveToDrive}
+          disabled={savingToDrive}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 mx-auto"
+        >
+          {savingToDrive ? 'Saving to Drive...' : 'Save to Drive'}
         </button>
       </div>
     </main>
