@@ -34,6 +34,8 @@ declare module 'next-auth' {
   }
   interface JWT {
     profile?: typeof profiles.$inferSelect;
+    access_token?: string | null;
+    refresh_token?: string | null;
   }
 }
 
@@ -48,9 +50,16 @@ export const authOptions: AuthOptions = {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
-          scope: ["https://www.googleapis.com/auth/calendar"]
-        },
-      },
+          include_granted_scopes: "false",
+          scope: [
+            "openid",
+            "https://www.googleapis.com/auth/userinfo.email",
+            "https://www.googleapis.com/auth/userinfo.profile",
+            "https://www.googleapis.com/auth/gmail.send",
+            "https://www.googleapis.com/auth/calendar"
+          ].join(" ")
+        }
+      }
     }),
     
     GitHubProvider({
