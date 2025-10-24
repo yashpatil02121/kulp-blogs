@@ -84,7 +84,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               The blog post you&apos;re looking for doesn&apos;t exist.
             </p>
             <Button asChild variant="outline" className="text-white border-white hover:bg-white hover:text-black">
-              <Link href="/blog">
+              <Link href="/blogs">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Blog
               </Link>
@@ -104,7 +104,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
         {/* Navigation */}
         <div className="mb-8">
           <Button variant="ghost" size="sm" asChild className="hover:bg-muted/50 text-white">
-            <Link href="/blog">
+            <Link href="/blogs">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Blog
             </Link>
@@ -190,7 +190,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
                 </div>
 
                 <Button variant="outline" size="sm" asChild>
-                  <Link href="/blog">
+                  <Link href="/blogs">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     More Articles
                   </Link>
