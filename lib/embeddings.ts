@@ -1,4 +1,7 @@
-import 'server-only';
+// Only import server-only in Next.js environment
+if (typeof window === 'undefined' && process.env.NEXT_RUNTIME) {
+  require("server-only");
+}
 import { pipeline } from '@xenova/transformers';
 
 let embedder: any = null;

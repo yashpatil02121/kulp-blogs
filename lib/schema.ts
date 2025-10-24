@@ -1,5 +1,9 @@
-import "server-only"
 import { pgTable, serial, text, timestamp, varchar, unique } from "drizzle-orm/pg-core"
+
+// Only import server-only in Next.js environment
+if (typeof window === 'undefined' && process.env.NEXT_RUNTIME) {
+  require("server-only");
+}
 
 export const posts = pgTable("posts", {
   id: serial("id").primaryKey(),

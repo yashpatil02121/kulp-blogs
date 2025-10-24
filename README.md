@@ -23,7 +23,13 @@ pnpm drizzle-kit generate
 pnpm drizzle-kit push
 
 ## Check the Tables
+<!-- office -->
+psql -U kulp -d kulp_blogs 
+
 psql -U postgres -d kulpblogs -c "\dt"
+
+<!-- Generate Embeddings -->
+pnpm run generate-embeddings
 
 ## Run the Development Server
 pnpm dev
