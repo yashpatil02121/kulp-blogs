@@ -131,10 +131,20 @@ export default function BlogsPage() {
   return (
     <div className="min-h-screen bg-black py-12 px-4">
       <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-white mb-8 text-center">All Blogs</h1>
-        <p className="text-xl text-gray-300 mb-8 text-center">
-          Discover all our blog posts and stories
-        </p>
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-4xl font-bold text-white">All Blogs</h1>
+            <p className="text-xl text-gray-300 mt-2">
+              Discover all our blog posts and stories
+            </p>
+          </div>
+          <Link
+            href="/posts/create"
+            className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg transition-colors font-medium"
+          >
+            Create New Post
+          </Link>
+        </div>
 
         {/* Search Bar */}
         <div className="mb-12 flex flex-col items-center gap-4">
