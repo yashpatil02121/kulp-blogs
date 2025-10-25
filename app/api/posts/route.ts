@@ -83,6 +83,15 @@ export async function POST(request: NextRequest) {
         createdAt: posts.createdAt,
       });
 
+    // ✅ Notify n8n webhook (non-blocking)
+    fetch("http://localhost:5678/webhook/new-post", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(result[0]),
+    }).catch((err) => {
+      console.error("n8n webhook failed:", err);
+    });
+
     return NextResponse.json(result[0], { status: 201 });
   } catch (error) {
     console.error('Error creating post:', error);
